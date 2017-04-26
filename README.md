@@ -123,12 +123,12 @@ if __name__ == '__main__':
 
 ## 服务端架构简介
 
-撰写中。。。
+![tcp_server](https://github.com/LightCong/SimpleReactor/blob/master/pic/tcp_server.png)
 
 
 ## 客户端结构简介
 
-撰写中。。。
+![tcp_client](https://github.com/LightCong/SimpleReactor/blob/master/pic/tcp_client.png)
 
 ## TODO List
 
