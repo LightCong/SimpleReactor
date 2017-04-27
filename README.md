@@ -28,12 +28,13 @@ class TestServer(tcp_server.TcpServer):
 	'''
 	继承TcpServer类
 	'''
-	def on_message(self, tcp_connection, buffer):
+	def on_message(self, tcp_connection, payload):
 		'''
 		定义连接接收到消息时的操作
 		'''
+		print payload
 		tcp_connection.send("hello world")
-		pass
+
 
 	def write_complete(self):
 		'''
@@ -62,11 +63,11 @@ class TestClient(tcp_client.TcpClient):
 	'''
 	继承TcpClient 类
 	'''
-	def on_message(self, tcp_connection, buffer):
+	def on_message(self, tcp_connection, payload):
 		'''
 		定义连接接收到消息时的操作
 		'''
-		print buffer.get_all()
+		print payload
 		pass
 
 	def write_complete(self):
@@ -108,7 +109,7 @@ class Test(object):
 			pass
 
 		i = 0
-		while i < 100:
+		while i < 10000:
 			self.tcp_client.tcp_connection.send(str(i)) #跨线程调用安全
 			i += 1
 
