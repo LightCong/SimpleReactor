@@ -17,11 +17,12 @@ class TcpConnection(object):
 	'''
 
 	def __init__(self,loop,conn_socket,conn_key):
-		import simple_socket,channel,buffer
+		import simple_socket,channel,buffer,payload_codec
 
 		self._loop=loop
 		self._conn_key=conn_key
 		self.socket=simple_socket.Socket(conn_socket)
+		self.payload_codec=payload_codec.PayLoadCodec() #处理tcp粘包,压缩/解压缩,加密/解密
 
 		self.channel=channel.Channel(self._loop,self.socket.fd)
 		self.channel.set_read_callback(self.handle_read)
@@ -43,18 +44,23 @@ class TcpConnection(object):
 		self.write_complete_callback=None
 
 	@decorator.RunInLoop
-	def send(self,data):
+	def send(self,payload):
 		# 不同于read,发送信息,是在tcpconnection中的一个主动调用接口
-		sent_count,if_close=self.socket.send(data)
+
+		message=self.payload_codec.generate_wrap_message_with_payload(payload)
+		if not message:
+			return
+
+		sent_count,if_close=self.socket.send(message)
 		if if_close:
 			self.handle_close()
 
-		if sent_count<len(data):
+		if sent_count<len(message):
 			# 剩余内容要入output_buffer
-			self.output_buffer.append(data[sent_count:])
+			self.output_buffer.append(message[sent_count:])
 			self.channel.need_write=True
 
-		elif sent_count==len(data) and self.write_complete_callback:
+		elif sent_count==len(message) and self.write_complete_callback:
 			# 一次发送完毕
 			self.write_complete_callback()
 
@@ -83,8 +89,17 @@ class TcpConnection(object):
 		# 接受到的内容,放到buffer里
 		self.read_buffer.append(recv_data)
 
-		if self.message_callback:
-			self.message_callback(self,self.read_buffer)
+		if not self.message_callback:
+			return
+
+		while 1:
+			'''
+			收到的数据,每一个报文都要处理完
+			'''
+			payload=self.payload_codec.get_payload_from_buffer(self.read_buffer)
+			if not payload:
+				break
+			self.message_callback(self,payload)
 
 
 	def handle_write(self):

@@ -1,13 +1,21 @@
 #encoding=utf8
+import sys
+sys.path.append(sys.path[0]+'/..')
 import tcp_server
 class TestServer(tcp_server.TcpServer):
+
 	'''
 	继承TcpServer类
 	'''
-	def on_message(self, tcp_connection, buffer):
+
+	def __init__(self,host_addr,timeout):
+		super(TestServer, self).__init__(host_addr,timeout)
+
+	def on_message(self, tcp_connection, payload):
 		'''
 		定义连接接收到消息时的操作
 		'''
+		print 'server recv:',payload
 		tcp_connection.send("hello world")
 		pass
 

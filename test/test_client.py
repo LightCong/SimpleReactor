@@ -8,11 +8,15 @@ class TestClient(tcp_client.TcpClient):
 	'''
 	继承TcpClient 类
 	'''
-	def on_message(self, tcp_connection, buffer):
+	def __init__(self,timeout):
+		super(TestClient,self).__init__(timeout)
+
+
+	def on_message(self, tcp_connection, payload):
 		'''
 		定义连接接收到消息时的操作
 		'''
-		print buffer.get_all()
+		print 'client recv :',payload
 		pass
 
 	def write_complete(self):
@@ -54,13 +58,13 @@ class Test(object):
 			pass
 
 		i = 0
-		while i < 100:
+		while i < 10000:
 			self.tcp_client.tcp_connection.send(str(i)) #跨线程调用安全
 			i += 1
 
+
 		while 1:
 			pass
-
 if __name__ == '__main__':
 	t=Test()
 	t.run()
