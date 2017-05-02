@@ -9,6 +9,7 @@ class Channel(object):
 		self.accept=False	  # 是否是listen_socket
 		self.readable=False   # 是否有读事件
 		self.writable=False   #是否有写事件
+		self.err=False
 
 		self.read_callback=None
 		self.write_callback=None
@@ -49,5 +50,5 @@ class Channel(object):
 		if self.writable and self.write_callback:
 			self.write_callback()
 
-		if self.error_callback:
+		if self.error_callback and self.err:
 			self.error_callback()

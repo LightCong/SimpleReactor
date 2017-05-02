@@ -12,10 +12,11 @@ class Connector(object):
 	'''
 	连接器
 	'''
-	def __init__(self,loop):
+	def __init__(self,loop,logger):
 		import simple_socket, channel
 		self._loop = loop
-		self.socket = simple_socket.Socket()
+		self._logger=logger
+		self.socket = simple_socket.Socket(self._logger)
 		self.connect_channel=channel.Channel(loop,self.socket.fd)
 		self.connect_channel.set_write_callback(self.handle_write)
 
@@ -43,7 +44,7 @@ class Connector(object):
 			pass
 
 		else:
-			# 连接建立失败
+			#todo 连接建立失败
 			pass
 
 		return connect_state

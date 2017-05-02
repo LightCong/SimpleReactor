@@ -3,15 +3,17 @@ class EventLoop(object):
 	'''
 	事件主循环类
 	'''
-	def __init__(self,timeout):
+	def __init__(self,timeout,logger):
 		import poller,timer,threading,Queue,pipe_event
-		self._poller=poller.SelectPoller() # io复用api的封装
+		self._logger = logger  # 日志输出
+		self._poller=poller.SelectPoller(self._logger) # io复用api的封装
 		self._timer_queue=timer.TimerQueue(self)# 定时器
 		self._is_running=False # 是否启动
 		self._timeout=timeout  #io复用阻塞时间,这也决定了定时器的精度
+
 		self._thread_id=threading.currentThread() # 当前线程id
 
-		self.pipe_event=pipe_event.PipeEvent(self)# 其他线程用于写入唤醒阻塞poller的管道对象
+		self.pipe_event=pipe_event.PipeEvent(self,self._logger)# 其他线程用于写入唤醒阻塞poller的管道对象
 
 
 		# 其它线程塞进来的要在io线程里执行的函数以及参数

@@ -5,9 +5,10 @@ class PipeEvent(object):
 	'''
 	将loop 从 poller 的阻塞态中唤醒,去执行别的线程通过主动接口发起的,在本io线程执行的操作
 	'''
-	def __init__(self,loop):
+	def __init__(self,loop,logger):
 		import os,channel
 		self._loop=loop
+		self._logger=logger
 		self.rfd,self.wfd=os.pipe()
 		self.pipe_channel=channel.Channel(self._loop,self.rfd) # 将管道的读描述符放到loop.poller 里去监听
 

@@ -2,7 +2,8 @@
 
 import socket
 class Socket(object):
-	def __init__(self,conn_socket=None):
+	def __init__(self,logger,conn_socket=None):
+		self._looger=logger
 		if conn_socket:
 			self.sock=conn_socket
 		else:

@@ -16,12 +16,12 @@ class TcpConnection(object):
 	每个客户端连接,对应一个tcp connection
 	'''
 
-	def __init__(self,loop,conn_socket,conn_key):
+	def __init__(self,loop,conn_socket,conn_key,logger):
 		import simple_socket,channel,buffer,payload_codec
-
+		self._logger=logger
 		self._loop=loop
 		self._conn_key=conn_key
-		self.socket=simple_socket.Socket(conn_socket)
+		self.socket=simple_socket.Socket(self._logger,conn_socket)
 		self.payload_codec=payload_codec.PayLoadCodec() #处理tcp粘包,压缩/解压缩,加密/解密
 
 		self.channel=channel.Channel(self._loop,self.socket.fd)
@@ -131,6 +131,9 @@ class TcpConnection(object):
 	def handle_error(self):
 		# 注册为channel 的回调
 		#todo 输出出错信息
+		message="connection error while poller"
+
+		self.handle_close()
 		pass
 
 

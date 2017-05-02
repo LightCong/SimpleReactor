@@ -3,8 +3,9 @@ class SelectPoller(object):
 	'''
 	基于select 的poller
 	'''
-	def __init__(self):
+	def __init__(self,logger):
 		self.channel_map={} # fd:channel_ins
+		self._logger=logger
 
 	def poll(self,timeout):
 		import select,error
@@ -31,7 +32,7 @@ class SelectPoller(object):
 				# 需要被监视读或者写的描述符,都需要被检测是否异常
 				xlist.append(channel._fd)
 				pass
-		#print rlist,wlist,xlist
+		#clcprint rlist,wlist,xlist
 		# 阻塞
 		try:
 			rlist,wlist,xlist=select.select(rlist,wlist,xlist,timeout)
@@ -44,7 +45,7 @@ class SelectPoller(object):
 				return active_channel
 		# 对于就绪的描述符,将其对应的channel ,放入到active_channel 中
 
-		#print rlist, wlist, xlist
+		#print "!!!",rlist, wlist, xlist
 		for rfd in rlist:
 			channel_ins = self.channel_map[rfd]
 			channel_ins.readable=True

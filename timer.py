@@ -124,7 +124,7 @@ if __name__ == '__main__':
 		print 'hello'
 
 	def test_func1():
-		print 'hello repeat'
+		 print 'hello repeat'
 	timer_ins=Timer(time.time()+2,2,test_func)
 	print timer_ins.timer_id
 	timer_ins1=Timer(time.time()+2,1,test_func1)

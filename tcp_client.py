@@ -4,10 +4,11 @@ class TcpClient(object):
 	TCP 客户端
 	'''
 	def __init__(self,timeout):
-		import connector, loop
-		self.loop=loop.EventLoop(timeout)
+		import connector,loop,logger
+		self.logger=logger.Logger()
+		self.loop=loop.EventLoop(timeout,self.logger)
 		self.tcp_connection=None
-		self.connector=connector.Connector(self.loop)
+		self.connector=connector.Connector(self.loop,self.logger)
 		self.connector.set_new_connection_callback(self.new_connection)
 
 	def connect(self,dst_addr):
@@ -28,7 +29,7 @@ class TcpClient(object):
 		import tcp_connection,time
 		host_addr=conn_socket.getsockname()
 		conn_key = '{}#{}#{}'.format(str(host_addr), str(peer_addr), str(time.time()))
-		self.tcp_connection=tcp_connection.TcpConnection(self.loop,conn_socket,conn_key)
+		self.tcp_connection=tcp_connection.TcpConnection(self.loop,conn_socket,conn_key,self.logger)
 		# 指定消息到来时的操作
 		self.tcp_connection.set_message_callback(self.on_message)
 

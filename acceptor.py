@@ -4,10 +4,11 @@ class Acceptor(object):
 	用于对监听socket 执行 accept,并创建一个新的tcp_connection
 	'''
 
-	def __init__(self,loop,host_addr):
+	def __init__(self,loop,host_addr,logger):
 		import simple_socket,channel
 		self._loop=loop
-		self.socket=simple_socket.Socket()
+		self._logger=logger
+		self.socket=simple_socket.Socket(self._logger)
 		self.socket.change_to_listen_socket(host_addr)
 		self.accept_channel=channel.Channel(loop,self.socket.fd)
 		self.new_connection_callback=None
