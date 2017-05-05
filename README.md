@@ -23,29 +23,39 @@ SimpleReactor一个用python编写的基于reactor 模型的tcp双端通讯框�
 服务端示例：
 
 ```
+#encoding=utf8
+import sys
+sys.path.append(sys.path[0]+'/..')
 import tcp_server
 class TestServer(tcp_server.TcpServer):
+
 	'''
 	继承TcpServer类
 	'''
-	def on_message(self, tcp_connection, payload):
+
+	def __init__(self,host_addr,timeout):
+		super(TestServer, self).__init__(host_addr,timeout)
+		self.i=0
+
+	def on_app_data(self, tcp_connection, payload):
 		'''
 		定义连接接收到消息时的操作
 		'''
-		print payload
-		tcp_connection.send("hello world")
-
+		print 'server recv:',payload
+		tcp_connection.send_data("hello world")
+		pass
 
 	def write_complete(self):
 		'''
 		定义消息发送完毕以后的操作
 		'''
-		print 'server write done!'
+		print 'server write done!',self.i
+		self.i+=1
 		pass
 
 
 if __name__ == '__main__':
-	server_ins=TestServer(('',8080),timeout=0.01)#绑定服务器监听socket地址和poller的阻塞间隔
+	server_ins=TestServer(('127.0.0.1',8080),timeout=0.01)#绑定服务器监听socket地址和poller的阻塞间隔
 	server_ins.run()# 启动服务器
 ```
 
@@ -54,6 +64,7 @@ if __name__ == '__main__':
 
 ```
 
+#encoding=utf8
 import threading
 import sys
 sys.path.append(sys.path[0]+'/..')
@@ -63,11 +74,15 @@ class TestClient(tcp_client.TcpClient):
 	'''
 	继承TcpClient 类
 	'''
-	def on_message(self, tcp_connection, payload):
+	def __init__(self,timeout):
+		super(TestClient,self).__init__(timeout)
+
+
+	def on_app_data(self, tcp_connection, payload):
 		'''
 		定义连接接收到消息时的操作
 		'''
-		print payload
+		print 'client recv :',payload
 		pass
 
 	def write_complete(self):
@@ -108,14 +123,15 @@ class Test(object):
 		while not self.tcp_client.tcp_connection:
 			pass
 
+
 		i = 0
 		while i < 10000:
-			self.tcp_client.tcp_connection.send(str(i)) #跨线程调用安全
+			if self.tcp_client.tcp_connection:
+				self.tcp_client.tcp_connection.send_data(str(i)) #跨线程调用安全
 			i += 1
 
 		while 1:
 			pass
-
 if __name__ == '__main__':
 	t=Test()
 	t.run()
