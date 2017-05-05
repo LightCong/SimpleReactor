@@ -3,12 +3,11 @@
 import socket
 class Socket(object):
 	def __init__(self,logger,conn_socket=None):
-		self._looger=logger
+		self._logger=logger
 		if conn_socket:
 			self.sock=conn_socket
 		else:
 			self.sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
 		self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # 地址复用,解决因为tcp time_wait 导致的服务器监听无法快速重启
 		self.sock.setsockopt(socket.SOL_SOCKET,socket.SO_KEEPALIVE,0) #停止tcp 保活,因为要在上层做心跳
 		self.sock.setblocking(0) #非阻塞
@@ -17,9 +16,6 @@ class Socket(object):
 	def change_to_listen_socket(self,host_addr):
 		self.sock.bind(host_addr)
 		self.sock.listen(socket.SOMAXCONN) # 监听队列的最大长度,这是系统独立的
-
-	def change_to_client_socket(self):
-		pass
 
 
 	@property
@@ -49,8 +45,9 @@ class Socket(object):
 				if_close=True
 				return '',if_close
 			else:
-				# TODO 输出错误日志
-				raise
+				log_message = 'socket recv failed'
+				self._logger.write_log(log_message, 'error')
+				return '', True
 
 
 	def send(self,data):
@@ -68,8 +65,9 @@ class Socket(object):
 				if_close=True
 				return 0,if_close
 			else:
-				# TODO 输出错误日志
-				raise
+				log_message='socket send failed'
+				self._logger.write_log(log_message,'error')
+				return 0,True
 
 
 
@@ -84,8 +82,8 @@ class Socket(object):
 				# error.EBADF: 描述符失效
 				return
 			else:
-				# TODO 输出错误日志
-				raise
+				log_message='socket close error'
+				self._logger.write_log(log_message, 'error')
 
 
 	def connect(self,dst_addr):
@@ -115,8 +113,9 @@ class Socket(object):
 		else:
 			# 连接出现错误
 			ret_state=ConnectorState.ERROR
-			# TODO 输出错误日志
-			raise
+			log_message='socket connect error'
+			self._logger.write_log(log_message,'error')
+			return ret_state
 
 
 	def accept(self):
@@ -136,8 +135,9 @@ class Socket(object):
 				# ECONNABORTED : 客户端发送了rst
 				return None,None
 			else:
-				#TODO 输出错误日志
-				raise
+				log_message = 'socket accept error'
+				self._logger.write_log(log_message, 'error')
+				return None,None
 
 
 	def get_peer_name(self):
@@ -147,14 +147,14 @@ class Socket(object):
 			return peer_name,if_success
 		except socket.error,err:
 			if_success=False
-			# TODO 输出错误日志
 			return None,if_success
 
 
 
 
 if __name__ == '__main__':
-	a=Socket()
+	import logger
+	a=Socket(logger.Logger())
 	print socket.SOMAXCONN
 
 

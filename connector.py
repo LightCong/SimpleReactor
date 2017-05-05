@@ -44,7 +44,9 @@ class Connector(object):
 			pass
 
 		else:
-			#todo 连接建立失败
+			#连接建立失败
+			log_message='connect failed'
+			self._logger.write_log(log_message,'error')
 			pass
 
 		return connect_state
@@ -67,13 +69,16 @@ class Connector(object):
 
 		else:
 			# 连接建立失败了
-			pass
+			log_message = "connect failed"
+			self._logger.write_log(log_message, 'error')
+			# todo 重新连接?
+
+
 
 	def handle_error(self):
 		# 注册为channel 的回调
-		# todo 输出出错信息
-		pass
-
+		log_message = "connector error while fd is listened by poller"
+		self._logger.write_log(log_message, 'error')
 
 	def set_new_connection_callback(self,method):
 		self.new_connection_callback=method

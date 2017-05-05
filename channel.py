@@ -7,9 +7,10 @@ class Channel(object):
 		self.need_write=False # 需要被检测读
 		self.need_read=False  # 需要被检测写
 		self.accept=False	  # 是否是listen_socket
+
 		self.readable=False   # 是否有读事件
 		self.writable=False   #是否有写事件
-		self.err=False
+		self.err=False	#描述符被poller检测时,是否出错
 
 		self.read_callback=None
 		self.write_callback=None

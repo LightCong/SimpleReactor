@@ -31,17 +31,14 @@ class PipeEvent(object):
 		'''
 		import os
 		recv_chr=os.read(self.rfd,1)
-		if not recv_chr==self.chr:
-			#TODO 读出的和写入的不一样,应该报错
-			pass
 
 
 
 
 if __name__ == '__main__':
-	import loop,timer
-	loop_ins=loop.EventLoop(0.01)
-	event_ins=PipeEvent(loop_ins)
+	import loop,timer,logger
+	loop_ins=loop.EventLoop(0.01,logger.Logger())
+	event_ins=PipeEvent(loop_ins,logger.Logger())
 	timer_ins=timer.Timer(0,1,event_ins.wake_up)
 	loop_ins.add_timer(timer_ins)
 	loop_ins._is_running=True

@@ -12,7 +12,7 @@ class TestClient(tcp_client.TcpClient):
 		super(TestClient,self).__init__(timeout)
 
 
-	def on_message(self, tcp_connection, payload):
+	def on_app_data(self, tcp_connection, payload):
 		'''
 		定义连接接收到消息时的操作
 		'''
@@ -57,10 +57,13 @@ class Test(object):
 		while not self.tcp_client.tcp_connection:
 			pass
 
+
 		i = 0
 		while i < 10000:
-			self.tcp_client.tcp_connection.send(str(i)) #跨线程调用安全
+			if self.tcp_client.tcp_connection:
+				self.tcp_client.tcp_connection.send_data(str(i)) #跨线程调用安全
 			i += 1
+
 
 
 		while 1:

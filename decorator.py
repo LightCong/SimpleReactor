@@ -16,8 +16,8 @@ class RunInLoop(object):
 			self._loop=instance._loop
 
 		else:
-			# TODO 调用functor 的类里没有loop,应该报错
-			pass
+			#调用functor 的类里没有loop,应该报错
+			raise Exception()
 
 		return self
 
@@ -32,10 +32,11 @@ class RunInLoop(object):
 
 
 if __name__ == '__main__':
+	import logger
 	class Test(object):
 		def __init__(self):
 			import loop
-			self._loop=loop.EventLoop(0.1)
+			self._loop=loop.EventLoop(0.1,logger.Logger())
 			pass
 
 		@RunInLoop

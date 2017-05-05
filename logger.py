@@ -27,7 +27,6 @@ class LoggerBackend(object):
 		import time,threading
 		while True:
 			log_str=self.queue.get()
-			# todo write
 			now=time.time()
 			if now-self._change_log_internel>self.log_start_time:
 				# 超过时间间隔了,需要开一个新日志
@@ -53,7 +52,7 @@ class Logger(object):
 	'''
 	异步日志系统,每个线程一个
 	'''
-	def __init__(self,flush_internal=3,buffer_len_bound=1024,queue=logger_backend.queue):
+	def __init__(self,flush_internal=1,buffer_len_bound=100,queue=logger_backend.queue):
 		import cStringIO,time
 
 		self.logger=None
@@ -93,18 +92,34 @@ class Logger(object):
 		self.logger.addHandler(self.file_handler)
 
 
-	def write_log(self,message,level,sync=False):
+	def write_log(self,log_message,level,sync=False):
 		'''
 		写入log
 		:param sync:是否阻塞直至缓冲区全部写入文件
 		运行在逻辑线程(非日志线程)
 		'''
-		import logging,time
+		import logging,time,sys
+		'''
 		if not level in logging.Logger.__dict__:
 			return
 
 		logging.Logger.__dict__[level](self.logger,message)
 		self.buffer_len+=len(message)
+		'''
+
+		call_frame=sys._getframe().f_back #获取调用write_log 的pyFrameObject
+
+		#获取事发地点的文件名,行号和函数名
+		fn, lno, func = call_frame.f_code.co_filename, call_frame.f_lineno, call_frame.f_code.co_name
+
+		# 制造记录
+		record = self.logger.makeRecord(self.logger.name, logging._levelNames[level.upper()],
+										fn=fn, lno=lno, msg=log_message,
+										args=None, exc_info=None, func=func, extra=None)
+		# 处理记录
+		self.logger.handle(record)
+		# 维护缓冲区消息长度
+		self.buffer_len += len(log_message)
 
 		now=time.time()
 		if sync==True:

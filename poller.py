@@ -32,14 +32,14 @@ class SelectPoller(object):
 				# 需要被监视读或者写的描述符,都需要被检测是否异常
 				xlist.append(channel._fd)
 				pass
-		#clcprint rlist,wlist,xlist
+		#print rlist,wlist,xlist
 		# 阻塞
 		try:
 			rlist,wlist,xlist=select.select(rlist,wlist,xlist,timeout)
 		except select.error, err:
 			if err.args[0]!=error.EINTR:
-				#TODO 输出错误信息
-				raise
+				#poller error
+				raise Exception()
 			else:
 				#阻塞调用被信号打断
 				return active_channel

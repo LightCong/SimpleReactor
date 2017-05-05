@@ -15,6 +15,8 @@ class Acceptor(object):
 
 		self.accept_channel.set_read_callback(self.handle_read) # 将handle_read 注册为所属channel 的read_callback
 		self.accept_channel.need_read=True
+
+		self.accept_channel.set_error_callback(self.handle_error)
 		pass
 
 
@@ -35,5 +37,12 @@ class Acceptor(object):
 			self.new_connection_callback(conn_socket,peer_host)
 
 
+	def handle_error(self):
+		# 注册为channel 的回调
+		log_message = "acceptor error while fd is listened by poller"
+		self._logger.write_log(log_message, 'error')
+
+
 if __name__ == '__main__':
-	a=Acceptor(None,('',8080))
+	import logger
+	a=Acceptor(None,('',8080),logger.Logger())

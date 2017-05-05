@@ -1,4 +1,5 @@
 #encoding=utf8
+import decorator
 class EventLoop(object):
 	'''
 	事件主循环类
@@ -61,8 +62,9 @@ class EventLoop(object):
 		'''
 		if not self.local_thread():
 			# 运行线程和创建线程不是一个
-			# todo 不应当正常运行
-			pass
+			log_message='not in the local thread'
+			self._logger.write_log(log_message,'error')
+			return
 
 		while self._is_running:
 			active_channel_lst=self._poller.poll(self._timeout)
@@ -89,7 +91,6 @@ class EventLoop(object):
 		self._poller.remove_channel(channel)
 		pass
 
-
 	def add_timer(self,tme):
 		self._timer_queue.add_timer(tme)
 
@@ -99,9 +100,10 @@ class EventLoop(object):
 
 
 
-if __name__ == '__main__':
 
-	event_loop_ins=EventLoop(1)
+if __name__ == '__main__':
+	import logger
+	event_loop_ins=EventLoop(1,logger.Logger())
 	event_loop_ins._is_running=True
 	event_loop_ins.loop()
 	pass

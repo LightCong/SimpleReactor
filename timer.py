@@ -55,24 +55,26 @@ class TimerQueue(object):
 	def schedule(self):
 		import time
 		now=time.time()
+		#print "schedule:",self.heap.queue,self.heap.queue[0].timer_id,self.heap.queue[0].canceled,self.heap.queue[0]._method
 		while not self.heap.empty():
 			if now<self.heap.queue[0]._expiration:
 				# 没有到时间的任务
 				break
 
-			expired_timer=self.heap._get()
+			expired_timer=self.heap.queue[0] #先不要出队列
 			assert (isinstance(expired_timer,Timer))
 
 			if expired_timer.canceled:
 				# 如果到期的timer是一个被取消掉的,那么减少cancel_timer_count 计数
-				# 然后继续弹堆
+				# 弹堆
+				self.heap.get()
 				self.cancel_timer_count-=1
 				continue
 
 			# 执行method函数
 			expired_timer._method(*expired_timer._args,**expired_timer._kwargs)
-
-			if expired_timer.repeatable:
+			self.heap.get()
+			if expired_timer.repeatable and not expired_timer.canceled:
 				# 如果是一个循环timer
 				# 利用间隔时间去计算下一次到期时间,然后入堆
 				expired_timer._expiration=time.time()+expired_timer._internal
@@ -91,7 +93,8 @@ class TimerQueue(object):
 				self.cancel_timer_count+=1
 				break
 
-		if self.cancel_timer_count*1.0/self.heap.qsize()>0.25:
+		heap_size=self.heap.qsize()
+		if heap_size >0 and self.cancel_timer_count*1.0/heap_size>0.25:
 			self.rebuild_heap()
 
 
@@ -117,23 +120,27 @@ class TimerQueue(object):
 
 
 if __name__ == '__main__':
-	import time,loop
-	timer_queue=TimerQueue(loop.EventLoop(0.01))
+	import time,loop,logger
+	timer_queue=TimerQueue(loop.EventLoop(0.01,logger.Logger()))
 
 	def test_func():
 		print 'hello'
 
 	def test_func1():
-		 print 'hello repeat'
+		print 'hello repeat'
 	timer_ins=Timer(time.time()+2,2,test_func)
 	print timer_ins.timer_id
 	timer_ins1=Timer(time.time()+2,1,test_func1)
 	print timer_ins1.timer_id
 	timer_queue.add_timer(timer_ins)
 	timer_queue.add_timer(timer_ins1)
+	i=0
 	while 1:
 		timer_queue.schedule()
 		time.sleep(1)
+		i+=1
+		if i==4:
+			timer_queue.remove_timer(timer_ins1.timer_id)
 	pass
 
 
