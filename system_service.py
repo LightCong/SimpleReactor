@@ -22,12 +22,12 @@ class SystemServiceCenter(object):
 			PayLoadCodec.PAYLOAD_SYS_LST.append(data_id)
 			self.data_handler_map[data_id]=func
 
-	def register_timer_handler(self,internal,func):
+	def register_timer_handler(self,internal,func,delay=0):
 		'''
 		增加一个每隔internal 时间执行的timer
 		'''
 		import timer,time
-		tme=timer.Timer(time.time(),internal,func)
+		tme=timer.Timer(time.time()+delay,internal,func)
 		self._loop.add_timer(tme)
 		return tme.timer_id
 
@@ -54,7 +54,6 @@ class ClientHeartBeatService(object):
 		self._tcp_client=tcp_client # 这里保存tcp_clent 引用,而不直接保存tcp_connection 的引用
 		self.heartbeat_internal=1
 		self._logger=logger
-		self.last_recv = 0
 		self.timer_id=-1
 		pass
 
@@ -65,7 +64,6 @@ class ClientHeartBeatService(object):
 		import time
 		self.last_recv=time.time()
 		self.timer_id=self._system_service_center.register_timer_handler(self.heartbeat_internal,self.check_heartbeat_recv)
-		self._system_service_center.register_message_handler(ClientHeartBeatService.SERVICEID,self.heartbeat_recv_handler)
 
 	def check_heartbeat_recv(self):
 		from tcp_connection import TcpConnectionState
@@ -78,24 +76,20 @@ class ClientHeartBeatService(object):
 				#已经被分配了定时任务,则删除定时任务
 				self._system_service_center.remove_timer(self.timer_id)
 				self.timer_id=-1
-			self.last_recv=0
-			pass
 
-		elif time.time() - self.last_recv > 2 * self.heartbeat_internal:
+		elif time.time() - self._tcp_client.tcp_connection.last_recv_time > 2 * self.heartbeat_internal:
 			# 超时,关闭连接
 			self._tcp_client.tcp_connection.shutdown()
-			self.last_recv = 0
 
 
 
 	def heartbeat_recv_handler(self, tcp_connection,heartbeat_data):
 		'''
-		心跳消息处理函数
+		心跳消息处理函数,没有使用
 		'''
-		print heartbeat_data
 		import time
 		if self.check_heartbeat_data(tcp_connection,heartbeat_data):
-			self.last_recv = time.time()
+			tcp_connection.last_recv = time.time()
 
 		else:
 			# 心跳消息不正确
@@ -105,7 +99,7 @@ class ClientHeartBeatService(object):
 
 	def check_heartbeat_data(self,tcp_connection,heartbeat_data):
 		'''
-		心跳消息验证
+		心跳消息验证,没有使用
 		'''
 		#  心跳格式:src_host#dst_host#start_time
 		if len(heartbeat_data.split('#'))==3:

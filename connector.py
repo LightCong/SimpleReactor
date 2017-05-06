@@ -1,4 +1,5 @@
 #encoding=utf8
+import decorator
 class ConnectorState(object):
 	'''
 	执行非阻塞connect 过程中 的状态
@@ -26,7 +27,7 @@ class Connector(object):
 		self.new_connection_callback=None # 由tcp_client 注册,在连接建立成功时调用
 
 
-
+	@decorator.RunInLoop
 	def connect(self,dst_addr):
 		'''
 		客户端连接的主动接口
@@ -48,8 +49,6 @@ class Connector(object):
 			log_message='connect failed'
 			self._logger.write_log(log_message,'error')
 			pass
-
-		return connect_state
 
 
 	def handle_write(self):

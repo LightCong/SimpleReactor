@@ -38,6 +38,7 @@ class EventLoop(object):
 		functor_count=self.inloop_functor_with_args_queue.qsize() # 获取这一刻一共有多少个functor要执行,之后加入队列的,下个周期执行
 		while functor_count>0:
 			functor, calle_ins, args, kwargs=self.inloop_functor_with_args_queue.get()
+			print 'functor_count', functor_count, functor, args, kwargs
 			functor(calle_ins,*args,**kwargs) #执行
 			functor_count-=1
 
@@ -60,11 +61,6 @@ class EventLoop(object):
 		'''
 		事件主循环
 		'''
-		if not self.local_thread():
-			# 运行线程和创建线程不是一个
-			log_message='not in the local thread'
-			self._logger.write_log(log_message,'error')
-			return
 
 		while self._is_running:
 			active_channel_lst=self._poller.poll(self._timeout)
@@ -72,10 +68,8 @@ class EventLoop(object):
 				channel.handle_event()
 			# 处理定时任务
 			self._timer_queue.schedule()
-
 			# 处理其他线程塞进来的任务
 			self.excute_inloop_funtctors()
-
 		pass
 
 

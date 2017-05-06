@@ -15,7 +15,7 @@ class TcpConnection(object):
 	每个客户端连接,对应一个tcp connection
 	'''
 	def __init__(self,loop,conn_socket,conn_key,logger):
-		import simple_socket,channel,buffer,message_codec,payload_codec
+		import simple_socket,channel,buffer,message_codec,payload_codec,time
 		self._logger=logger
 		self._loop=loop
 		self._conn_key=conn_key
@@ -41,10 +41,11 @@ class TcpConnection(object):
 
 		self.close_callback = None
 		self.payload_callback = None
-		self.write_complete_callback=None
+
+		self.last_recv_time=time.time()
 
 	import payload_codec
-	@decorator.RunInLoop
+
 	def send_data(self,data,tpe=payload_codec.PayLoadCodec.PAYLOAD_APP):
 		'''
 		tcp_connection 的send_data 接口负责从payload 层向下处理
@@ -52,7 +53,6 @@ class TcpConnection(object):
 		payload=self.payload_codec.generate_payload_with_data(data,tpe)
 		self.send(payload)
 
-	@decorator.RunInLoop
 	def send(self,payload):
 		'''
 		tcp_connection 的send 接口负责从payload 层向下处理
@@ -70,17 +70,16 @@ class TcpConnection(object):
 		sent_count,if_close=self.socket.send(message)
 		if if_close:
 			self.handle_close()
-
 		if sent_count<len(message):
 			# 剩余内容要入output_buffer
-			self.output_buffer.append(message[sent_count:])
-			self.channel.need_write=True
+			self.send_in_loop(message[sent_count:])
 
-		elif sent_count==len(message) and self.write_complete_callback:
-			# 一次发送完毕
-			self.write_complete_callback()
 
-		pass
+	@decorator.RunInLoop
+	def send_in_loop(self,piece):
+		self.output_buffer.append(piece)
+		self.channel.need_write = True
+
 
 	@decorator.RunInLoop
 	def shutdown(self):
@@ -99,13 +98,13 @@ class TcpConnection(object):
 
 	def handle_read(self):
 		# 注册为channel 里的回调
-		recv_fragment, if_close = self.socket.recv(65535)
+		import time
+		recv_fragment, if_close = self.socket.recv(65535*100)
 		if if_close:
 			self.handle_close()
-
+			return
 		# 接受到的内容,放到buffer里
 		self.read_buffer.append(recv_fragment)
-
 		while True:
 			'''
 			收到的数据,每一个报文都要处理完
@@ -113,6 +112,7 @@ class TcpConnection(object):
 			payload=self.message_codec.get_payload_from_buffer(self.read_buffer)
 			if not payload:
 				break
+			self.last_recv_time = time.time() #以每次收到一个 payload
 			if self.payload_callback:
 				self.payload_callback(self,payload)
 
@@ -129,10 +129,6 @@ class TcpConnection(object):
 			# 缓冲区发送干净了
 			self.channel.need_write=False # 数据发送完了,就要关闭channel的写监听,防止
 			self.output_buffer.add_read_index(sent_count) # 调整read_index
-
-
-			if self.write_complete_callback:
-				self.write_complete_callback()
 
 			if self.state==TcpConnectionState.DISCONNECTING:
 				# 连接已经被下达了主动关闭的指令
@@ -175,9 +171,6 @@ class TcpConnection(object):
 		self.payload_callback = method
 
 
-	def set_write_complete_callback(self,method):
-		self.write_complete_callback=method
-		pass
 
 
 

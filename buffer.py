@@ -17,8 +17,8 @@ class Buffer(object):
 
 	def reset(self):
 		import cStringIO
-		del self._buf
-		self._buf = cStringIO.StringIO()
+		self._buf.seek(0)
+		self._buf.truncate()
 		self.read_index = 0
 		self.write_index = 0
 
@@ -52,13 +52,16 @@ class Buffer(object):
 		# 调整读指针位置
 		self._buf.seek(self.read_index,0)
 		content= self._buf.read(real_size)
-		self.read_index+=real_size
+		self._buf.seek(self.read_index,0) #恢复原位置
+		return content
 
-		if self.read_index==self.write_index and self.write_index>self._max_size:
+	def add_read_index(self, count):
+		self.read_index += count
+		if self.read_index > self.write_index:
+			self.read_index = self.write_index
+		if self.read_index == self.write_index and self.read_index > self._max_size:
 			# 已经被读取,然而还存在buf里的数据尺寸太大了,要clear 一下
 			self.reset()
-
-		return content
 
 
 	# ---------------以下api 针对于output_buffer 使用-------------------
@@ -67,18 +70,6 @@ class Buffer(object):
 		self._buf.seek(self.read_index,0)
 		content=self._buf.read()
 		return content
-
-
-	def add_read_index(self,count):
-
-		self.read_index+=count
-		if self.read_index>self.write_index:
-			self.read_index=self.write_index
-		if self.read_index==self.write_index and self.read_index>self._max_size:
-			# 已经被读取,然而还存在buf里的数据尺寸太大了,要clear 一下
-			self.reset()
-
-
 
 
 if __name__ == '__main__':

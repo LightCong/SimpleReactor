@@ -51,11 +51,14 @@ class MessageCodec(object):
 		message_len_bytes = buffer.read(MessageCodec.MESSAGE_LENGTH_LEN)
 		message_len = struct.unpack(MessageCodec.MESSAGE_LENGTH_FORMAT, message_len_bytes)[0]
 
-		if buffer.size < message_len:
+		if buffer.size-MessageCodec.MESSAGE_LENGTH_LEN < message_len:
 			# 当前缓冲区的长度过小,message 没有接收全
 			return None
 
+		buffer.add_read_index(MessageCodec.MESSAGE_LENGTH_LEN)
+
 		tmp_payload = buffer.read(message_len)
+		buffer.add_read_index(message_len)
 
 		if self._encryptor and self._if_encrypt:
 			# 如果指定了加密,则解密
@@ -66,6 +69,7 @@ class MessageCodec(object):
 			tmp_payload = self._compressor.decompress(tmp_payload)
 
 		payload = tmp_payload
+
 
 		return payload
 
