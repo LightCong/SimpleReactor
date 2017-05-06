@@ -24,39 +24,52 @@ SimpleReactor一个用python编写的基于reactor 模型的tcp双端通讯框�
 
 ```
 #encoding=utf8
-import sys
+import sys,threading
 sys.path.append(sys.path[0]+'/..')
-import tcp_server
-class TestServer(tcp_server.TcpServer):
+class TestServer(object):
 
 	'''
 	继承TcpServer类
 	'''
-
 	def __init__(self,host_addr,timeout):
-		super(TestServer, self).__init__(host_addr,timeout)
-		self.i=0
+		import logger,tcp_server
+		self.logger=logger.Logger()
+		self.tcp_server=tcp_server.TcpServer(host_addr,timeout,self.logger)
+		self.tcp_server.set_app_data_callback(self.on_app_data)
+		self.io_thread = threading.Thread(target=self.io_thread_func)
+		self.io_thread.setDaemon(True)
+		self.condition=threading.Condition()
+		self.mutex=threading.Lock()
+		self.ready=False
 
-	def on_app_data(self, tcp_connection, payload):
+
+
+	def io_thread_func(self):
+		#开启服务器
+		self.tcp_server.run()
+
+
+	def on_app_data(self, tcp_connection, data):
 		'''
 		定义连接接收到消息时的操作
 		'''
-		print 'server recv:',payload
+		print 'server recv:',data
 		tcp_connection.send_data("hello world")
 		pass
 
-	def write_complete(self):
-		'''
-		定义消息发送完毕以后的操作
-		'''
-		print 'server write done!',self.i
-		self.i+=1
-		pass
+	def start(self):
+		self.io_thread.start()
+		#self.tcp_server.run()
+
 
 
 if __name__ == '__main__':
 	server_ins=TestServer(('127.0.0.1',8080),timeout=0.01)#绑定服务器监听socket地址和poller的阻塞间隔
-	server_ins.run()# 启动服务器
+	server_ins.start()
+
+	while True:
+		pass
+
 ```
 
 客户端示例：
@@ -67,73 +80,59 @@ if __name__ == '__main__':
 #encoding=utf8
 import threading
 import sys
+import time
 sys.path.append(sys.path[0]+'/..')
 import tcp_client
 
-class TestClient(tcp_client.TcpClient):
-	'''
-	继承TcpClient 类
-	'''
+class TestClient(object):
 	def __init__(self,timeout):
-		super(TestClient,self).__init__(timeout)
-
-
-	def on_app_data(self, tcp_connection, payload):
-		'''
-		定义连接接收到消息时的操作
-		'''
-		print 'client recv :',payload
-		pass
-
-	def write_complete(self):
-		'''
-		定义消息发送完毕以后的操作
-		'''
-		print 'client write done!'
-		pass
-
-
-class Test(object):
-	def __init__(self):
-		self.tcp_client = None
-		# self.mutex=threading.Lock()
+		import logger,tcp_client
+		self.logger=logger.Logger()
+		self.tcp_client=tcp_client.TcpClient(timeout,self.logger)
+		self.tcp_client.set_app_data_callback(self.on_app_data)
 		self.condition = threading.Condition()
-		self.thread = threading.Thread(target=self.thread_start)
-		self.thread.setDaemon(True)
-		self.thread.start()
+		self.io_thread = threading.Thread(target=self.io_thread_func)
+		self.io_thread.setDaemon(True)
+		self.io_thread.start()
+		self.c=0
+		self.start_time=0
 
-	def thread_start(self):
-		'''
-		在io 线程,启动tcp_client
-		'''
-		with self.condition:
-			self.tcp_client = TestClient(0.01)
-			self.tcp_client.connect(('127.0.0.1', 8080))
-			self.condition.notify()
+
+	def io_thread_func(self):
 		self.tcp_client.run()
+
 
 	def run(self):
 		'''
 		在主线程调用send接口
 		'''
-		with self.condition:
-			while not self.tcp_client:
-				self.condition.wait()
-
+		self.tcp_client.connect(('127.0.0.1', 8080))
 		while not self.tcp_client.tcp_connection:
 			pass
-
-
+		self.start_time=time.time()
 		i = 0
-		while i < 10000:
+		while i < 100000:
 			if self.tcp_client.tcp_connection:
-				self.tcp_client.tcp_connection.send_data(str(i)) #跨线程调用安全
+				self.tcp_client.tcp_connection.send_data(str(i))  # 跨线程调用安全
 			i += 1
 
-		while 1:
+
+		while True:
 			pass
+
+	def on_app_data(self, tcp_connection, data):
+		'''
+		定义连接接收到消息时的操作
+		'''
+		print 'client recv :',data,self.c
+		self.c+=1
+		if self.c==9999:
+			print time.time()-self.start_time
+
+		pass
+
 if __name__ == '__main__':
-	t=Test()
+	t=TestClient(0.01)
 	t.run()
 ```
 
@@ -151,7 +150,7 @@ if __name__ == '__main__':
 
 
 
-3. 增加更多对外接口
+
 4. 增加对 epoll，kqueue 等不同平台下高性能poller的支持
  
 6. 压力测试
@@ -162,6 +161,7 @@ if __name__ == '__main__':
 5. 传输信息的压缩解压缩 
 2. 异常行为处理完善
 7. 心跳服务
+3. 增加更多对外接口
 
 
 
