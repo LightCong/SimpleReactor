@@ -1,4 +1,4 @@
-#encoding=utf8
+# encoding=utf8
 class MessageCodec(object):
 	'''
 	报文,头部指示了整个报文的长度
@@ -6,12 +6,12 @@ class MessageCodec(object):
 	MESSAGE_LENGTH_FORMAT = '<I'
 	MESSAGE_LENGTH_LEN = 4
 
-	def __init__(self,if_comress=True,if_encrypt=False):
+	def __init__(self, if_comress=True, if_encrypt=False):
 		import compress, encrypt
 		self._compressor = compress.Compressor()
 		self._encryptor = encrypt.Encrptor()
-		self._if_compress=if_comress
-		self._if_encrypt=if_encrypt
+		self._if_compress = if_comress
+		self._if_encrypt = if_encrypt
 
 	def generate_message_with_payload(self, payload):
 		'''
@@ -51,7 +51,7 @@ class MessageCodec(object):
 		message_len_bytes = buffer.read(MessageCodec.MESSAGE_LENGTH_LEN)
 		message_len = struct.unpack(MessageCodec.MESSAGE_LENGTH_FORMAT, message_len_bytes)[0]
 
-		if buffer.size-MessageCodec.MESSAGE_LENGTH_LEN < message_len:
+		if buffer.size - MessageCodec.MESSAGE_LENGTH_LEN < message_len:
 			# 当前缓冲区的长度过小,message 没有接收全
 			return None
 
@@ -70,25 +70,24 @@ class MessageCodec(object):
 
 		payload = tmp_payload
 
-
 		return payload
 
 
 if __name__ == '__main__':
-	payload='Wait, there is more! You can even mix "--bind" and "--connect". That means that your server will wait for requests on a given address, and connect as a worker on another. Likewise, you can specify "--connect" multiple times, so your worker will connect to multiple queues. If a queue is not running, it wons the magic of zeromq).'
+	payload = 'Wait, there is more! You can even mix "--bind" and "--connect". That means that your server will wait for requests on a given address, and connect as a worker on another. Likewise, you can specify "--connect" multiple times, so your worker will connect to multiple queues. If a queue is not running, it wons the magic of zeromq).'
 
 	import buffer
-	buffer_ins=buffer.Buffer()
-	message_codec=MessageCodec()
 
+	buffer_ins = buffer.Buffer()
+	message_codec = MessageCodec()
 
-	message=message_codec.generate_message_with_payload(payload)
-	print message,len(message)
+	message = message_codec.generate_message_with_payload(payload)
+	print message, len(message)
 
 	buffer_ins.append(message)
 
-	payload=message_codec.get_payload_from_buffer(buffer_ins)
+	payload = message_codec.get_payload_from_buffer(buffer_ins)
 
-	print payload,len(payload)
+	print payload, len(payload)
 
 	pass

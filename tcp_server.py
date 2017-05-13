@@ -41,6 +41,7 @@ class TcpServer(object):
 
 	def remove_connection(self,connection):
 		# 注册为 tcp_connection 的回调函数
+		import sys
 		conn_key=connection._conn_key
 		if not conn_key in self.tcpconnection_map:
 			return

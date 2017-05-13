@@ -1,11 +1,9 @@
 #encoding=utf8
 import sys,threading
-sys.path.append(sys.path[0]+'/..')
+# sys.path[0] 当前module 所在目录
+sys.path.append(sys.path[0]+'/..') #将test包的父目录reactor加进来,这样才能引用到reactor中的组件
 class TestServer(object):
 
-	'''
-	继承TcpServer类
-	'''
 	def __init__(self,host_addr,timeout):
 		import logger,tcp_server
 		self.logger=logger.Logger()
@@ -41,11 +39,8 @@ class TestServer(object):
 if __name__ == '__main__':
 	server_ins=TestServer(('127.0.0.1',8080),timeout=0.01)#绑定服务器监听socket地址和poller的阻塞间隔
 	server_ins.start()
-	#while True:
-		#print threading.activeCount()
-	#	pass
+
 	while True:
 		pass
-		#print server_ins.io_thread.is_alive()
 
 

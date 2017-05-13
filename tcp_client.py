@@ -118,6 +118,15 @@ class TcpClient(object):
 			return
 		self.tcp_connection.send_data(data)
 
+	def check_connected(self):
+		'''
+		检测是否连接正常
+		'''
+		from tcp_connection import TcpConnectionState
+		if self.tcp_connection and self.tcp_connection.state==TcpConnectionState.CONNECTED:
+			return True
+		return False
+
 
 if __name__ == '__main__':
 	pass

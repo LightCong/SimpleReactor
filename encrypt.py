@@ -1,10 +1,12 @@
-#encoding=utf-8
+# encoding=utf-8
 import time
-class Encrptor(object):
-	def __init__(self,key=None):
-		self.key= "mini10_cheer_up!!"
 
-	def kernel(self,val):
+
+class Encrptor(object):
+	def __init__(self, key=None):
+		self.key = "mini10_cheer_up!!"
+
+	def kernel(self, val):
 		en_byte_array = bytearray()
 		val_byte_array = bytearray(val)  # 将待加密串转为bytearray
 		key_byte_array = bytearray(self.key)  # 将模式串转为bytearray
@@ -17,7 +19,7 @@ class Encrptor(object):
 		en_byte_array.reverse()
 		return str(en_byte_array)
 
-	def de_kernel(self,val):
+	def de_kernel(self, val):
 		de_byte_array = bytearray()
 		val_byte_array = bytearray(val)  # 将待解密串转为bytearray
 		key_byte_array = bytearray(self.key)  # 将模式串转为bytearray
@@ -31,7 +33,7 @@ class Encrptor(object):
 			de_byte_array.append(en_byte)
 		return str(de_byte_array)
 
-	def encrypt(self,val):
+	def encrypt(self, val):
 		encrypt_result = ''
 		while len(encrypt_result) != len(val):
 			# 待加密串比加密模式串长，一次加密加密不完，用模式串分批加密
@@ -39,7 +41,7 @@ class Encrptor(object):
 			encrypt_result += part_result
 		return encrypt_result
 
-	def decrypt(self,val):
+	def decrypt(self, val):
 		decrypt_result = ''
 		while len(decrypt_result) != len(val):
 			# 待加密串比加密模式串长，一次加密加密不完，用模式串分批加密
@@ -48,14 +50,11 @@ class Encrptor(object):
 		return decrypt_result
 
 
-
 if __name__ == '__main__':
 	encryptor = Encrptor()
-	val= 'conxgiaflkasujfoaw;emfnaw;cfuawo;jmawel;fhaweo;ajl;kfaw'
+	val = 'conxgiaflkasujfoaw;emfnaw;cfuawo;jmawel;fhaweo;ajl;kfaw'
 	result = encryptor.encrypt(val)
-	#print aa,len(aa)
+	# print aa,len(aa)
 	re = encryptor.decrypt(result)
-	#print time.time()-start_time
-	print re,len(re)
-
-
+	# print time.time()-start_time
+	print re, len(re)
