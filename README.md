@@ -15,7 +15,7 @@ SimpleReactor一个用python编写的基于reactor 模型的tcp双端通讯框�
 - SimpleReactor 的send，shutdown 等主动接口对于跨线程调用是安全的，其真正执行的时机会发生在io线程执行时。因此当需要向网络上发送消息时，无论实在io线程里，还是在逻辑执行线程中都可以直接调用发送接口。
 
 - SimpleReactor 对于消息接受的处理执行是基于事件驱动的。
-用户可以通过覆写onmessage函数定义接受到消息时需要采用的操作。
+用户可以通过覆写on_app_data函数定义接受到消息时需要采用的操作。
 
 
 ## 使用教程
