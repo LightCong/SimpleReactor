@@ -64,6 +64,8 @@ class ClientHeartBeatService(object):
 		import time
 		self.last_recv=time.time()
 		self.timer_id=self._system_service_center.register_timer_handler(self.heartbeat_internal,self.check_heartbeat_recv)
+		self._system_service_center.register_message_handler(ClientHeartBeatService.SERVICEID,self.heartbeat_recv_handler)
+
 
 	def check_heartbeat_recv(self):
 		from tcp_connection import TcpConnectionState

@@ -4,8 +4,8 @@ class Channel(object):
 	def __init__(self, loop, fd):
 		self._loop = loop
 		self._fd = fd
-		self.need_write = False  # 需要被检测读
-		self.need_read = False  # 需要被检测写
+		self._need_write = False  # 需要被检测读
+		self._need_read = False  # 需要被检测写
 		self.accept = False  # 是否是listen_socket
 
 		self.readable = False  # 是否有读事件
@@ -17,6 +17,30 @@ class Channel(object):
 		self.error_callback = None
 
 		# 生成一个channel 实例,就把自己放入到loop.poller 的map中
+		self._loop.update_channel(self)
+
+	@property
+	def need_write(self):
+		return self._need_write
+
+	@property
+	def need_read(self):
+		return self._need_read
+
+	@need_write.setter
+	def need_write(self, val):
+		'''
+		need_write 设置要出发loop中的更新
+		'''
+		self._need_write = val
+		self._loop.update_channel(self)
+
+	@need_read.setter
+	def need_read(self, val):
+		'''
+		need_read 设置要出发loop中的更新
+		'''
+		self._need_read = val
 		self._loop.update_channel(self)
 
 	def disable_all(self):

@@ -10,7 +10,8 @@ class EventLoop(object):
 	def __init__(self, timeout, logger):
 		import poller, timer, threading, Queue, pipe_event
 		self._logger = logger  # 日志输出
-		self._poller = poller.SelectPoller(self._logger)  # io复用api的封装
+		#self._poller = poller.SelectPoller(self._logger)  # io复用api的封装
+		self._poller = poller.KqueuePoller(self._logger)  # io复用api的封装
 		self._timer_queue = timer.TimerQueue(self)  # 定时器
 		self._is_running = False  # 是否启动
 		self._timeout = timeout  # io复用阻塞时间,这也决定了定时器的精度
