@@ -27,10 +27,6 @@ SimpleReactor一个用python编写的基于reactor 模型的tcp双端通讯框�
 import sys,threading
 sys.path.append(sys.path[0]+'/..')
 class TestServer(object):
-
-	'''
-	继承TcpServer类
-	'''
 	def __init__(self,host_addr,timeout):
 		import logger,tcp_server
 		self.logger=logger.Logger()
