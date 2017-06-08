@@ -15,10 +15,6 @@ class TcpServer(object):
 
 		# 系统服务中心
 		self.system_service_center=system_service.SystemServiceCenter(self._logger,self.loop)
-		# 心跳服务
-		self.heartbeat_service=system_service.ServerHeartBeatService(self.system_service_center,self.tcpconnection_map)
-		# 服务注册
-		self.heartbeat_service.register()
 
 		self.app_data_callback = None
 
@@ -119,6 +115,15 @@ class TcpServer(object):
 			tcp_connection.shutdown()
 
 		self.loop._is_running=False
+
+
+	def use_heartbeat(self):
+		import system_service
+		# 心跳服务
+		self.heartbeat_service=system_service.ServerHeartBeatService(self.system_service_center,self.tcpconnection_map)
+		# 服务注册
+		self.heartbeat_service.register()
+
 
 
 

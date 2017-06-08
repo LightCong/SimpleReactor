@@ -8,14 +8,12 @@ class TcpClient(object):
 		import connector, loop, system_service
 		self._logger = logger
 		self.loop = loop.EventLoop(timeout, self._logger)
-		self.tcp_connection = None
+		self.tcpconnection_map = {}  # 一个客户端也可以维持多个tcp连接
 		self.connector = connector.Connector(self.loop, self._logger)
 		self.connector.set_new_connection_callback(self.new_connection)
 
 		# 系统服务中心
 		self.system_service_center = system_service.SystemServiceCenter(self._logger, self.loop)
-		# 心跳服务
-		self.heartbeat_service = system_service.ClientHeartBeatService(self._logger, self.system_service_center, self)
 
 		self.app_data_callback = None
 
@@ -24,21 +22,20 @@ class TcpClient(object):
 		import tcp_connection, time
 		host_addr = conn_socket.getsockname()
 		conn_key = '{}#{}#{}'.format(str(host_addr), str(peer_addr), str(time.time()))
-		self.tcp_connection = tcp_connection.TcpConnection(self.loop, conn_socket, conn_key, self._logger)
+		connection = tcp_connection.TcpConnection(self.loop, conn_socket, conn_key, self._logger)
 		# 指定连接断开时tcp server 的操作
-		self.tcp_connection.set_close_callback(self.remove_connection)
-
+		connection.set_close_callback(self.remove_connection)
 		# 指定负载到来时的操作
-		self.tcp_connection.set_payload_callback(self.on_payload)
-
-		# 客户端连接成功以后,再进行心跳服务的注册
-		self.heartbeat_service.register()
-		pass
+		connection.set_payload_callback(self.on_payload)
+		self.tcpconnection_map[conn_key] = connection
 
 	def remove_connection(self, connection):
 		# 注册为 tcp_connection 的回调函数
-		self.tcp_connection = None
-		pass
+		import sys
+		conn_key = connection._conn_key
+		if not conn_key in self.tcpconnection_map:
+			return
+		del self.tcpconnection_map[conn_key]
 
 	def on_payload(self, tcp_connection, payload):
 		'''
@@ -73,16 +70,19 @@ class TcpClient(object):
 		'''
 		客户端连接
 		'''
-		self.connector.connect(dst_addr)
-		pass
+		import connector
+		connector_ins=connector.Connector(self.loop,self._logger)
+		connector_ins.set_new_connection_callback(self.new_connection)
+		connector_ins.connect(dst_addr)
 
-	def disconnect(self):
+
+	def disconnect(self, conn_key):
 		'''
-		客户端断开
+		客户端断开某个连接
 		'''
-		if not self.tcp_connection:
+		if not conn_key in self.tcpconnection_map:
 			return
-		self.tcp_connection.shutdown()
+		self.tcpconnection_map[conn_key].shutdown()
 
 	def set_app_data_callback(self, method):
 		'''
@@ -106,22 +106,40 @@ class TcpClient(object):
 		self.loop.remove_timer(timer_id)
 		pass
 
-	def send_data(self, data):
+	def send_data(self, conn_key, data):
 		'''
 		发送消息
 		'''
-		if not self.tcp_connection:
+		if not conn_key in self.tcpconnection_map:
 			return
-		self.tcp_connection.send_data(data)
 
-	def check_connected(self):
+		self.tcpconnection_map[conn_key].send_data(data)
+
+	def check_connected(self, conn_key):
 		'''
 		检测是否连接正常
 		'''
 		from tcp_connection import TcpConnectionState
-		if self.tcp_connection and self.tcp_connection.state == TcpConnectionState.CONNECTED:
+
+		if conn_key in self.tcpconnection_map and \
+						self.tcpconnection_map[conn_key].state == TcpConnectionState.CONNECTED:
 			return True
 		return False
+
+	def use_heartbeat(self):
+		import system_service
+		# 心跳服务
+		self.heartbeat_service = system_service.ClientHeartBeatService(self._logger, self.system_service_center, self)
+		# 服务注册
+		self.heartbeat_service.register()
+
+
+	def close(self):
+		self.loop._is_running = False
+		for conn_key,connection in self.tcpconnection_map.iteritems():
+			self.disconnect(conn_key)
+
+
 
 
 if __name__ == '__main__':

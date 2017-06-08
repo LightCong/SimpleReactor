@@ -33,6 +33,7 @@ class Connector(object):
 		'''
 		客户端连接的主动接口
 		'''
+
 		connect_state = self.socket.connect(dst_addr)
 		if connect_state == ConnectorState.CONNECTING:
 			# 连接正在建立
@@ -42,7 +43,7 @@ class Connector(object):
 
 		elif connect_state == ConnectorState.CONNECTED:
 			# 连接建立完成
-			self.new_connection_callback(self.socket)
+			self.new_connection_callback(self.socket.sock, dst_addr)
 			pass
 
 		else:
@@ -56,7 +57,6 @@ class Connector(object):
 		# (2) 如果在 select 之前，连接就建立好了，而且对方的数据已到达，那么 sockfd 是可读和可写的。
 		# (3) 如果连接发生错误，sockfd 也是可读和可写的。
 
-
 		# 在任何平台下,这里只要能成功获得对端host,则说明连接成功建立了
 		peer_addr, if_success = self.socket.get_peer_name()
 		if if_success:
@@ -65,6 +65,7 @@ class Connector(object):
 			# 执行channel.close,将channel 从 poller.channel_map 中去掉
 			self.connect_channel.close()
 			self.new_connection_callback(self.socket.sock, peer_addr)
+
 
 		else:
 			# 连接建立失败了

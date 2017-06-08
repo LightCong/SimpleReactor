@@ -34,7 +34,6 @@ class LoggerBackend(object):
 				# 超过时间间隔了,需要开一个新日志
 				self.log_start_time = now
 				self.filename = self.get_filename()
-
 			# 写日志到文件
 			wfp = open(self.filename, 'a')
 			wfp.write(log_str)

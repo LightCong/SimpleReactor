@@ -51,7 +51,7 @@ class ClientHeartBeatService(object):
 	def __init__(self,logger,system_service_center,tcp_client):
 		import time
 		self._system_service_center=system_service_center
-		self._tcp_client=tcp_client # 这里保存tcp_clent 引用,而不直接保存tcp_connection 的引用
+		self._tcp_client=tcp_client # 这里保存tcp_clent 引用
 		self.heartbeat_internal=1
 		self._logger=logger
 		self.timer_id=-1
@@ -71,23 +71,18 @@ class ClientHeartBeatService(object):
 		from tcp_connection import TcpConnectionState
 		import time
 
-		if not self._tcp_client.tcp_connection or \
-						self._tcp_client.tcp_connection.state!=TcpConnectionState.CONNECTED:
-			#不是连接状态
-			if self.timer_id!=-1:
-				#已经被分配了定时任务,则删除定时任务
-				self._system_service_center.remove_timer(self.timer_id)
-				self.timer_id=-1
+		for conn_key,connection in self._tcp_client.tcpconnection_map.iteritems():
+			if not self._tcp_client.check_connected(conn_key):
+				continue
 
-		elif time.time() - self._tcp_client.tcp_connection.last_recv_time > 2 * self.heartbeat_internal:
-			# 超时,关闭连接
-			self._tcp_client.tcp_connection.shutdown()
+			if time.time() - connection.last_recv_time > 2 * self.heartbeat_internal:
+				connection.shutdown()
 
 
 
 	def heartbeat_recv_handler(self, tcp_connection,heartbeat_data):
 		'''
-		心跳消息处理函数,没有使用
+		心跳消息处理函数
 		'''
 		import time
 		if self.check_heartbeat_data(tcp_connection,heartbeat_data):

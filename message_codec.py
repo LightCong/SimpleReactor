@@ -33,7 +33,6 @@ class MessageCodec(object):
 		message_len = len(tmp_message)  # 待传输消息的长度
 		message_len_bytes = struct.pack(MessageCodec.MESSAGE_LENGTH_FORMAT, message_len)
 		message = message_len_bytes + tmp_message
-
 		return message
 
 	def get_payload_from_buffer(self, buffer):

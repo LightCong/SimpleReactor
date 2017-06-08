@@ -45,7 +45,6 @@ class SelectPoller(object):
 				# 阻塞调用被信号打断
 				return active_channel
 		# 对于就绪的描述符,将其对应的channel ,放入到active_channel 中
-
 		for rfd in rlist:
 			channel_ins = self.channel_map[rfd]
 			channel_ins.readable = True
