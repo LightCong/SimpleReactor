@@ -142,13 +142,7 @@ class EchoClient(object):
 		tcp_connection.send_data(data)
 
 if __name__ == '__main__':
-	client_ins = EchoClient(0.0001,
-							10000,
-							"hello world",
-							100,
-							('127.0.0.1', 8080))  # 绑定服务器监听socket地址和poller的阻塞间隔
-
-
+	client_ins = EchoClient(0.0001,10000,"hello world",100,('127.0.0.1', 8080))  # 绑定服务器监听socket地址和poller的阻塞间隔
 	client_ins.begin_test()
 
 	while True:
